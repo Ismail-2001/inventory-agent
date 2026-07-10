@@ -1,4 +1,4 @@
-# Inventory Agent — AI Employee #2
+# Inventory Management AI Employee
 
 > **Hire your first autonomous inventory employee.** Syncs, forecasts, detects risks, drafts purchase orders, and reports — 24/7, with human oversight where it matters.
 
