@@ -227,6 +227,7 @@ query OrdersQuery($cursor: String, $since: String!) {
               sku
               quantity
               product { id }
+              variant { id sku }
             }
           }
         }
@@ -242,7 +243,7 @@ def _parse_shopify_date(d: str) -> date:
 
 
 async def sync_sales_history(days: int = 90) -> int:
-    since = (datetime.utcnow() - timedelta(days=days)).isoformat() + "Z"
+    since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00Z")
     synced = 0
     async with _shopify_client() as client:
         cursor: str | None = None
@@ -267,11 +268,22 @@ async def sync_sales_history(days: int = 90) -> int:
                 order_date = _parse_shopify_date(order["createdAt"])
                 for le in order["lineItems"]["edges"]:
                     li = le["node"]
-                    sku_code: str | None = li.get("sku")
-                    if not sku_code:
-                        continue
+                    variant_id: str | None = None
+                    var = li.get("variant")
+                    if var and var.get("id"):
+                        variant_id = _parse_gid(var["id"])
                     quantity = li.get("quantity", 0)
                     if quantity <= 0:
+                        continue
+
+                    sku_code: str | None = (var or {}).get("sku") or li.get("sku")
+                    if not sku_code:
+                        import logging
+                        logging.getLogger("shopify_sync").warning(
+                            "Skipping line item — no SKU on variant or top-level. "
+                            "variant_id=%s qty=%s",
+                            variant_id, quantity,
+                        )
                         continue
 
                     async with async_session_factory() as session:
@@ -279,6 +291,11 @@ async def sync_sales_history(days: int = 90) -> int:
                             select(Sku).where(Sku.sku_code == sku_code).limit(1)
                         )
                         sku = result.scalar_one_or_none()
+                        if sku is None and variant_id:
+                            result = await session.execute(
+                                select(Sku).where(Sku.shopify_variant_id == variant_id).limit(1)
+                            )
+                            sku = result.scalar_one_or_none()
                         if sku is None:
                             continue
 
