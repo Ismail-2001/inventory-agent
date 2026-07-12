@@ -39,50 +39,56 @@ export default function Analytics() {
   const fore = metrics?.forecast_error
 
   const barData = [
-    { label: 'Accepted As-Is', value: acc?.accepted_as_is_pct ?? 0, color: 'bg-green-400' },
-    { label: 'Edited & Approved', value: acc?.edited_then_approved_pct ?? 0, color: 'bg-amber-400' },
-    { label: 'Rejected', value: acc?.rejected_pct ?? 0, color: 'bg-red-400' },
-  ]
+    { label: 'Accepted As-Is', value: acc?.accepted_as_is_pct ?? 0, tone: 'healthy' },
+    { label: 'Edited & Approved', value: acc?.edited_then_approved_pct ?? 0, tone: 'warning' },
+    { label: 'Rejected', value: acc?.rejected_pct ?? 0, tone: 'critical' },
+  ] as const
+
+  const barTone: Record<string, string> = {
+    healthy: 'bg-healthy',
+    warning: 'bg-warning',
+    critical: 'bg-critical',
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-          <p className="text-sm text-gray-500 mt-1">Agent performance and forecast accuracy</p>
+          <h2 className="text-xl font-medium">Analytics</h2>
+          <p className="mt-1 text-[13.5px] text-ink-muted">Agent performance and forecast accuracy</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleEval}
             disabled={evalLoading}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-border-strong bg-surface px-4 text-sm font-medium transition-colors hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-40"
           >
-            {evalLoading ? 'Evaluating...' : 'Evaluate Outcomes'}
+            {evalLoading ? 'Evaluating…' : 'Evaluate Outcomes'}
           </button>
           <button
             onClick={handleWeekly}
             disabled={weekloading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="inline-flex h-9 items-center justify-center rounded-md bg-accent px-4 text-sm font-medium text-ink-on-accent transition-colors hover:bg-accent-hover disabled:pointer-events-none disabled:opacity-40"
           >
-            {weekloading ? 'Running...' : 'Run Weekly Report'}
+            {weekloading ? 'Running…' : 'Run Weekly Report'}
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">PO Acceptance Rates</h3>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-border bg-surface p-5">
+          <h3 className="mb-4 text-[13px] font-medium text-ink-muted">PO Acceptance Rates</h3>
           {acc ? (
             <div className="space-y-4">
               {barData.map(d => (
                 <div key={d.label}>
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <div className="mb-1 flex justify-between text-[13px] text-ink-muted">
                     <span>{d.label}</span>
-                    <span className="font-medium">{d.value}%</span>
+                    <span className="tabular font-medium text-ink">{d.value}%</span>
                   </div>
-                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-surface-sunken">
                     <div
-                      className={`h-full rounded-full ${d.color} transition-all`}
+                      className={`h-full rounded-full transition-all ${barTone[d.tone]}`}
                       style={{ width: `${d.value}%` }}
                     />
                   </div>
@@ -90,40 +96,37 @@ export default function Analytics() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">No PO data yet</p>
+            <p className="text-[13px] text-ink-faint">No PO data yet</p>
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Forecast Error Distribution</h3>
+        <div className="rounded-lg border border-border bg-surface p-5">
+          <h3 className="mb-4 text-[13px] font-medium text-ink-muted">Forecast Error Distribution</h3>
           {fore ? (
             <div className="space-y-4">
-              <div className="flex items-end gap-3 h-32">
-                <div className="flex-1 flex flex-col items-center">
-                  <span className="text-lg font-bold text-gray-900">{fore.min_error_pct}%</span>
-                  <span className="text-xs text-gray-400 mt-1">Min</span>
-                  <div className="w-full bg-gray-100 rounded-t mt-1" style={{ height: '24px' }} />
+              <div className="flex h-32 items-end gap-3">
+                <div className="flex flex-1 flex-col items-center">
+                  <span className="tabular text-lg font-medium">{fore.min_error_pct}%</span>
+                  <span className="mt-1 text-[11px] text-ink-faint">Min</span>
+                  <div className="mt-1 w-full rounded-t bg-surface-sunken" style={{ height: '24px' }} />
                 </div>
-                <div className="flex-1 flex flex-col items-center">
-                  <span className="text-lg font-bold text-gray-900">{fore.mean_error_pct}%</span>
-                  <span className="text-xs text-gray-400 mt-1">Mean</span>
-                  <div
-                    className="w-full bg-blue-400 rounded-t mt-1"
-                    style={{ height: '48px' }}
-                  />
+                <div className="flex flex-1 flex-col items-center">
+                  <span className="tabular text-lg font-medium">{fore.mean_error_pct}%</span>
+                  <span className="mt-1 text-[11px] text-ink-faint">Mean</span>
+                  <div className="mt-1 w-full rounded-t bg-accent" style={{ height: '48px' }} />
                 </div>
-                <div className="flex-1 flex flex-col items-center">
-                  <span className="text-lg font-bold text-gray-900">{fore.max_error_pct}%</span>
-                  <span className="text-xs text-gray-400 mt-1">Max</span>
-                  <div className="w-full bg-gray-100 rounded-t mt-1" style={{ height: '24px' }} />
+                <div className="flex flex-1 flex-col items-center">
+                  <span className="tabular text-lg font-medium">{fore.max_error_pct}%</span>
+                  <span className="mt-1 text-[11px] text-ink-faint">Max</span>
+                  <div className="mt-1 w-full rounded-t bg-surface-sunken" style={{ height: '24px' }} />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 text-center">
-                Based on {fore.count} evaluated outcome{fore.count !== 1 ? 's' : ''} &middot; Stockout rate: {fore.stockout_rate}%
+              <p className="text-center font-mono text-[12px] text-ink-muted">
+                Based on {fore.count} evaluated outcome{fore.count !== 1 ? 's' : ''} · Stockout rate: {fore.stockout_rate}%
               </p>
             </div>
           ) : (
-            <p className="text-sm text-gray-400">Not enough outcome data yet</p>
+            <p className="text-[13px] text-ink-faint">Not enough outcome data yet</p>
           )}
         </div>
       </div>

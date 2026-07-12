@@ -11,18 +11,18 @@ export function formatDate(iso: string | null): string {
 
 export function statusColor(status: string): string {
   switch (status) {
-    case 'approved': return 'text-green-600 bg-green-50 border-green-200'
-    case 'rejected': return 'text-red-600 bg-red-50 border-red-200'
-    case 'pending_approval': return 'text-amber-600 bg-amber-50 border-amber-200'
-    case 'draft': return 'text-gray-600 bg-gray-50 border-gray-200'
-    default: return 'text-gray-600 bg-gray-50 border-gray-200'
+    case 'approved': return 'text-healthy bg-healthy-bg border-healthy/20'
+    case 'rejected': return 'text-critical bg-critical-bg border-critical/20'
+    case 'pending_approval': return 'text-warning bg-warning-bg border-warning/20'
+    case 'draft': return 'text-ink-muted bg-surface-sunken border-border-strong'
+    default: return 'text-ink-muted bg-surface-sunken border-border-strong'
   }
 }
 
 export function riskColor(level: string): string {
   switch (level) {
-    case 'critical': return 'text-red-700 bg-red-50'
-    case 'warning': return 'text-amber-700 bg-amber-50'
-    default: return 'text-green-700 bg-green-50'
+    case 'critical': return 'text-critical bg-critical-bg'
+    case 'warning': return 'text-warning bg-warning-bg'
+    default: return 'text-healthy bg-healthy-bg'
   }
 }

@@ -22,35 +22,35 @@ export default function Inventory() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Inventory</h2>
-        <p className="text-sm text-gray-500 mt-1">All SKUs and stock levels</p>
+        <h2 className="text-xl font-medium">Inventory</h2>
+        <p className="mt-1 text-[13.5px] text-ink-muted">All SKUs and stock levels</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-border bg-surface">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-left text-[13.5px]">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-500">SKU</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Title</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Stock</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Location</th>
+              <tr className="border-b border-border text-[11px] uppercase tracking-wide text-ink-faint">
+                <th className="px-4 py-2.5 font-medium">SKU</th>
+                <th className="px-4 py-2.5 font-medium">Title</th>
+                <th className="px-4 py-2.5 text-right font-medium">Stock</th>
+                <th className="px-4 py-2.5 font-medium">Location</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                    Run a sync from the Dashboard to load inventory data
+                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-ink-faint">
+                    A GET /api/v1/skus endpoint is needed to list synced inventory here — not built yet.
                   </td>
                 </tr>
               ) : (
                 items.map(item => (
-                  <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{item.sku_code || item.shopify_variant_id}</td>
+                  <tr key={item.id} className="border-b border-border last:border-0 hover:bg-surface-sunken/60">
+                    <td className="px-4 py-3 font-mono text-[12px] text-ink-faint">{item.sku_code || item.shopify_variant_id}</td>
                     <td className="px-4 py-3">{item.title}</td>
-                    <td className="px-4 py-3 text-right font-medium">{item.current_stock}</td>
-                    <td className="px-4 py-3 text-gray-500">{item.location_id || '—'}</td>
+                    <td className="tabular px-4 py-3 text-right font-medium">{item.current_stock}</td>
+                    <td className="px-4 py-3 text-ink-muted">{item.location_id || '—'}</td>
                   </tr>
                 ))
               )}
