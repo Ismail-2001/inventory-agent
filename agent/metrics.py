@@ -45,7 +45,7 @@ async def calculate_acceptance_rate(
     }
 
 
-async def calculate_forecast_error_summary(since: date | None = None) -> list:
+async def calculate_forecast_error_summary(since: date | None = None) -> dict | None:
     from agent.models import POOutcome
 
     if since is None:
@@ -58,11 +58,11 @@ async def calculate_forecast_error_summary(since: date | None = None) -> list:
         outcomes = result.scalars().all()
 
     if not outcomes:
-        return []
+        return None
 
     errors = [o.forecast_error_pct for o in outcomes if o.forecast_error_pct is not None]
     if not errors:
-        return []
+        return None
 
     return {
         "count": len(errors),

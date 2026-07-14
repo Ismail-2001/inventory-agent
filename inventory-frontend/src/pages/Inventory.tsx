@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { api } from '../lib/api'
 
 interface SkuItem {
@@ -14,13 +15,15 @@ export default function Inventory() {
   const [items, setItems] = useState<SkuItem[]>([])
 
   useEffect(() => {
+    // NOTE: this only triggers a sync, it does not populate items - there is
+    // no GET /api/v1/skus endpoint yet to list synced inventory.
     api.runSync().then(() => {
       setItems([])
     }).catch(() => {})
   }, [])
 
   return (
-    <div className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div>
         <h2 className="text-xl font-medium">Inventory</h2>
         <p className="mt-1 text-[13.5px] text-ink-muted">All SKUs and stock levels</p>
@@ -58,6 +61,6 @@ export default function Inventory() {
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
