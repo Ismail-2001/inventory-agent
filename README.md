@@ -1,34 +1,32 @@
 # Inventory Management AI Employee
 
-> **Hire your first autonomous inventory employee.** Syncs, forecasts, detects risks, drafts purchase orders, and reports — 24/7, with human oversight where it matters.
+> **Your autonomous inventory operations agent.** Syncs, forecasts, detects risks, drafts purchase orders, and reports — 24/7, with human oversight where it matters.
 
-![AI Employee](https://img.shields.io/badge/AI%20Employee-%232-blue) ![LangGraph](https://img.shields.io/badge/Powered%20By-LangGraph-purple) ![FastAPI](https://img.shields.io/badge/Stack-FastAPI%2BReact-teal)
+![LangGraph](https://img.shields.io/badge/Powered%20By-LangGraph-purple) ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-green) ![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-blue) ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791)
 
 ---
 
-## For Business Owners
-
-### The Problem
+## The Problem
 
 Inventory operations are **reactive, manual, and expensive**:
 
-- Your team spends *hours per day* checking stock levels instead of growing the business
+- Teams spend *hours per day* checking stock levels instead of growing the business
 - Stockouts cost **3–5× the product's value** in lost revenue and damaged trust
 - Overstock ties up **30–50% of working capital** in dead inventory
 - Purchase orders bounce between email, spreadsheets, and Slack — taking **3–5 days** to approve
 - No one has time to analyze forecast accuracy or track whether POs actually worked
 
-### The Solution
+## The Solution
 
-AI Employee #2 is a **full-time, autonomous inventory operations agent** that:
+A **full-time, autonomous inventory operations agent** that:
 
 1. **Watches every SKU** — syncs sales, stock, and product data from Shopify automatically
 2. **Predicts demand** — statistical forecasting (not guesswork) for 30/60/90-day horizons
 3. **Flags risks before they happen** — stockout, overstock, and dead-stock alerts per SKU
 4. **Drafts purchase orders** — calculates quantity, cost, and explains *why* in plain English
-5. **Pauses for your approval** — one-click approve/reject from Slack, no login required
+5. **Pauses for your approval** — one-click approve/reject from the dashboard or Slack
 6. **Tracks outcomes** — did the PO prevent a stockout? Was the forecast accurate? Measured automatically.
-7. **Reports weekly** — AI-generated insights and recommendations delivered to your team's Slack
+7. **Reports weekly** — AI-generated insights and recommendations delivered to your team
 
 ---
 
@@ -40,15 +38,16 @@ AI Employee #2 is a **full-time, autonomous inventory operations agent** that:
 | **Demand Forecasting** | Exponential smoothing for 30/60/90-day projections per SKU |
 | **Risk Detection** | Classifies every SKU as stockout, overstock, dead-stock, or healthy |
 | **AI Purchase Orders** | Drafts POs with calculated quantity, unit cost, total cost, and LLM reasoning |
-| **Human Approval** | Pauses the agent workflow; approve/reject via Slack with one click |
+| **Human Approval** | Pauses the agent workflow; approve/reject from dashboard or Slack with one click |
 | **Quantity Editing** | Approvers can adjust PO quantities before approval |
 | **Outcome Tracking** | Evaluates POs post-fulfillment — measures acceptance rate and forecast error |
 | **Weekly Reflection** | LLM reviews metrics and generates a management summary with recommendations |
 | **Slack Notifications** | Real-time alerts for risks, pending POs, and weekly digests |
-| **RBAC** | API key auth with admin, viewer, and approver roles |
+| **RBAC** | API key auth with owner, staff, and viewer roles |
 | **Audit Trail** | Append-only log of every state change — immutable, queryable |
 | **Observability** | OpenTelemetry tracing across every agent node |
-| **Dashboard** | React frontend with real-time metrics, PO management, and analytics |
+| **React Dashboard** | Real-time metrics, PO management, analytics, and inventory browser |
+| **Animated UI** | Framer Motion page transitions, animated numbers, toast notifications |
 | **Eval Suite** | 28 forecast accuracy regression tests with a deploy-blocking MAPE gate |
 
 ---
@@ -81,18 +80,6 @@ The agent is a directed state graph. Each node is an independent, traced functio
 
 ---
 
-## Quick ROI
-
-| Metric | Typical Improvement |
-|---|---|
-| Stockout incidents | **↓ 60–80%** with daily risk monitoring |
-| Time spent on PO approval | **↓ 90%** — one click from Slack |
-| Forecast accuracy | **↑ 40%** vs. manual gut-feel methods |
-| Working capital freed | **15–25%** reduction in overstock |
-| Operations team hours saved | **10–15 hours/week** per store |
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -101,7 +88,8 @@ The agent is a directed state graph. Each node is an independent, traced functio
 | **Orchestration** | LangGraph (state graph + Postgres checkpointer) |
 | **Database** | PostgreSQL 16 (SQLAlchemy async + asyncpg) |
 | **LLM** | Gemini 2.0 Flash / OpenAI GPT-4 (configurable) |
-| **Frontend** | React 19 + TypeScript 6 + Vite 8 + Tailwind CSS 4 |
+| **Frontend** | React 19 + TypeScript + Vite + Tailwind CSS 4 |
+| **Animations** | Framer Motion |
 | **Migrations** | Alembic |
 | **Notifications** | Slack Incoming Webhooks |
 | **Observability** | OpenTelemetry (console + OTLP export) |
@@ -118,13 +106,13 @@ The agent is a directed state graph. Each node is an independent, traced functio
 - Docker & Docker Compose (recommended) or Python 3.12+ locally
 - A Shopify dev store with an Admin API token
 - A Gemini API key (or OpenAI key)
-- A Slack webhook URL for notifications
+- A Slack webhook URL for notifications (optional)
 
 ### 1. Clone & Configure
 
 ```bash
-git clone https://github.com/Ismail-2001/inventory-agent.git
-cd inventory-agent
+git clone https://github.com/Ismail-2001/Inventory-Management-AI-Employee.git
+cd Inventory-Management-AI-Employee
 cp .env.example .env
 ```
 
@@ -172,7 +160,8 @@ The agent syncs products, runs forecasts, detects risks, drafts POs, and sends S
 |---|---|---|---|
 | `GET` | `/health` | — | Health check |
 | `POST` | `/api/v1/run-sync` | API key | Trigger full sync → forecast → risk → PO → notify flow |
-| `GET` | `/api/v1/po` | API key | List all purchase orders |
+| `GET` | `/api/v1/skus` | API key | List all synced SKUs with stock levels |
+| `GET` | `/api/v1/po` | API key | List all purchase orders (filter by `?status=`) |
 | `POST` | `/api/v1/po/{id}/approve` | API key | Approve a PO (optionally override quantity) |
 | `POST` | `/api/v1/po/{id}/reject` | API key | Reject a PO with a reason |
 | `GET` | `/api/v1/po/action?token=` | Signed HMAC | One-click approve/reject from Slack (no login) |
@@ -188,73 +177,60 @@ The agent syncs products, runs forecasts, detects risks, drafts POs, and sends S
 ## Project Structure
 
 ```
-├── agent/                    # Core agent logic
-│   ├── nodes/                # LangGraph node implementations
-│   │   ├── sync_node.py      # Shopify data sync
-│   │   ├── forecast_node.py  # Demand forecasting
-│   │   ├── risk_node.py      # Risk classification
-│   │   ├── po_draft_node.py  # PO generation + LLM reasoning
-│   │   ├── notify_node.py    # Slack notifications
-│   │   ├── reflection_node.py# Weekly insight generation
-│   │   └── reporting_node.py # Slack digest formatting
-│   ├── graph.py              # LangGraph state machine
-│   ├── shopify_sync.py       # Shopify GraphQL client
-│   ├── forecast.py           # Exponential smoothing engine
-│   ├── risk.py               # Risk classification rules
-│   ├── ordering.py           # Reorder quantity formulas
-│   ├── outcomes.py           # PO outcome evaluation
-│   ├── metrics.py            # Acceptance rate & forecast error
-│   ├── scheduler.py          # APScheduler job definitions
-│   ├── config.py             # Environment configuration
-│   ├── models.py             # SQLAlchemy ORM models
-│   ├── db.py                 # Async database session
-│   ├── auth.py               # RBAC and API key verification
-│   ├── audit.py              # Append-only audit log
-│   ├── signing.py            # HMAC token generation
-│   ├── telemetry.py          # OpenTelemetry tracing
-│   └── webhooks.py           # Shopify HMAC verification
-├── api/                      # FastAPI server
-│   ├── main.py               # App entry, CORS, error handlers
+├── agent/                        # Core agent logic
+│   ├── nodes/                    # LangGraph node implementations
+│   │   ├── sync_node.py          # Shopify data sync
+│   │   ├── forecast_node.py      # Demand forecasting
+│   │   ├── risk_node.py          # Risk classification
+│   │   ├── po_draft_node.py      # PO generation + LLM reasoning
+│   │   ├── notify_node.py        # Slack notifications
+│   │   ├── reflection_node.py    # Weekly insight generation
+│   │   └── reporting_node.py     # Slack digest formatting
+│   ├── graph.py                  # LangGraph state machine
+│   ├── shopify_sync.py           # Shopify GraphQL client
+│   ├── forecast.py               # Exponential smoothing engine
+│   ├── risk.py                   # Risk classification rules
+│   ├── ordering.py               # Reorder quantity formulas
+│   ├── outcomes.py               # PO outcome evaluation
+│   ├── metrics.py                # Acceptance rate & forecast error
+│   ├── scheduler.py              # APScheduler job definitions
+│   ├── config.py                 # Environment configuration
+│   ├── models.py                 # SQLAlchemy ORM models
+│   ├── db.py                     # Async database session
+│   ├── auth.py                   # RBAC and API key verification
+│   ├── audit.py                  # Append-only audit log
+│   ├── signing.py                # HMAC token generation
+│   ├── telemetry.py              # OpenTelemetry tracing
+│   └── webhooks.py               # Shopify HMAC verification
+├── api/                          # FastAPI server
+│   ├── main.py                   # App entry, CORS, error handlers
 │   └── routes/
-│       ├── run_sync.py
-│       ├── purchase_orders.py
-│       ├── webhooks.py
-│       └── operations.py
-├── alembic/                  # Database migrations
+│       ├── run_sync.py           # POST /api/v1/run-sync
+│       ├── purchase_orders.py    # GET/POST /api/v1/po/*
+│       ├── operations.py         # GET /api/v1/skus, metrics, evaluate
+│       └── webhooks.py           # POST /webhooks/shopify
+├── alembic/                      # Database migrations
 │   └── versions/
 │       ├── 001_initial_schema.py
 │       ├── 002_suppliers_and_purchase_orders.py
-│       └── 003_phase3_tables.py
-├── inventory-frontend/       # React dashboard
+│       ├── 003_phase3_tables.py
+│       └── 004_multi_tenant_scoping.py
+├── inventory-frontend/           # React dashboard
 │   └── src/
-│       ├── pages/            # Dashboard, Inventory, POs, Analytics, Settings
-│       ├── components/       # Layout shell
-│       └── lib/              # API client + utilities
+│       ├── pages/                # Dashboard, Inventory, POs, Analytics, Settings
+│       ├── components/           # Layout shell, AnimatedNumber
+│       └── lib/                  # API client, utils, toast notifications
 ├── tests/
 │   ├── test_forecast.py
 │   ├── test_risk.py
 │   ├── test_ordering.py
 │   ├── test_signing.py
 │   ├── test_agent.py
-│   └── eval_suite.py         # 28-case regression suite (MAPE < 30%)
+│   └── eval_suite.py             # 28-case regression suite (MAPE < 30%)
 ├── Dockerfile
 ├── docker-compose.yml
 └── Makefile
 ```
-
----
-
-## Testing
-
-```bash
-# Run all unit tests
-pytest tests/ -v
-
-# Run forecast accuracy regression suite
-python -m pytest tests/eval_suite.py -v
-```
-
-The eval suite runs 28 forecast accuracy tests against historical data. It enforces a **30% MAPE (Mean Absolute Percentage Error)** threshold — if forecast accuracy degrades beyond this gate, the suite fails. This prevents regressions during development.
 
 ---
 
@@ -273,6 +249,22 @@ All configuration is via environment variables (see `.env.example`).
 | `AGENT_API_KEY` | No | `demo-key-2024` | API key for endpoint authentication |
 | `SLACK_WEBHOOK_URL` | No | — | Slack incoming webhook URL |
 | `SHOPIFY_WEBHOOK_SECRET` | No | — | Shopify app shared secret |
+| `ENVIRONMENT` | No | `development` | Set to `production` to disable demo key |
+| `ALLOW_DEMO_KEY` | No | `true` | Must be `true` for demo key to work |
+
+---
+
+## Testing
+
+```bash
+# Run all unit tests
+pytest tests/ -v
+
+# Run forecast accuracy regression suite
+python -m pytest tests/eval_suite.py -v
+```
+
+The eval suite runs 28 forecast accuracy tests against historical data. It enforces a **30% MAPE (Mean Absolute Percentage Error)** threshold — if forecast accuracy degrades beyond this gate, the suite fails.
 
 ---
 
@@ -281,51 +273,29 @@ All configuration is via environment variables (see `.env.example`).
 ### Production Checklist
 
 1. **Set a strong `AGENT_API_KEY`** — never use the demo key in production
-2. **Configure `SHOPIFY_WEBHOOK_SECRET`** — enables HMAC-verified Shopify webhooks
-3. **Set up a production database** — use a managed PostgreSQL 16 instance
-4. **Enable Slack** — without a webhook URL, notifications are silently skipped
-5. **Configure an LLM provider** — the PO draft and reflection nodes require an LLM
-6. **Run migrations** — `alembic upgrade head` on deploy
+2. **Set `ENVIRONMENT=production`** — disables the demo key automatically
+3. **Configure `SHOPIFY_WEBHOOK_SECRET`** — enables HMAC-verified Shopify webhooks
+4. **Set up a production database** — use a managed PostgreSQL 16 instance
+5. **Enable Slack** — without a webhook URL, notifications are silently skipped
+6. **Configure an LLM provider** — the PO draft and reflection nodes require an LLM
+7. **Run migrations** — `alembic upgrade head` on deploy
+8. **Remove `docker-compose.override.yml`** — it enables hot-reload, not for production
 
-### Using Docker Compose (production)
+### Docker Compose (production)
 
 ```bash
 docker compose -f docker-compose.yml up -d --build
 ```
 
-Remove `docker-compose.override.yml` (which enables hot-reload) from production deployments.
-
 ---
 
-## Use Cases
+## Security
 
-### 📦 DTC Brand with 500+ SKUs
-"Before AI Employee #2, we had one person doing 4 hours of stock checks every morning. Now they focus on supplier relationships and marketing. Stockouts dropped from 12% to 3% in two months."
-
-### 🏪 Multi-location Retailer
-"We run 8 stores and a warehouse. The agent tracks every location, flags cross-dock opportunities, and drafts consolidated POs. Our inventory turns went from 3.2 to 5.1."
-
-### 🚚 Wholesale Distributor
-"Our lead times are 4–6 weeks. Missing a reorder window costs us $50K+ in lost sales. The agent's 90-day forecast caught a demand spike we would have missed. That single alert paid for the year."
-
----
-
-## Plans
-
-| Plan | Setup | Monthly | Includes |
-|---|---|---|---|
-| **Starter** | $1,500 | $500 | 1 store, up to 1,000 SKUs, basic integrations |
-| **Growth** | $3,000 | $1,000 | Up to 3 stores, unlimited SKUs, Slack + Shopify, priority support |
-| **Enterprise** | Custom | Custom | Multi-agent, custom integrations, SLA, dedicated onboarding |
-
----
-
-## Support
-
-- **Documentation:** See this README and the `/docs` endpoint when running
-- **Issues:** Report bugs at [GitHub Issues](https://github.com/Ismail-2001/inventory-agent/issues)
-- **Email:** ismail@example.com
-- **Response time:** Within 24 hours on business days
+- **RBAC enforced** — owner/staff roles required for PO approval; viewers are read-only
+- **Demo key gated** — `demo-key-2024` only works when `ALLOW_DEMO_KEY=true` (disabled in production)
+- **CORS locked down** — no wildcard origins; configurable via `ALLOWED_ORIGINS`
+- **HMAC signed links** — Slack approval links use signed tokens, not plain IDs
+- **No secrets in code** — all credentials via environment variables, `.env` is gitignored
 
 ---
 
