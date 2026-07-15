@@ -10,8 +10,9 @@ import os
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
-from agent.inventory_agent import agent, InventoryItem, InventoryAnalysis, BulkAnalysisRequest, BulkAnalysisResponse
+
 from api.rate_limit import limiter
+from agent.inventory_agent import agent, InventoryItem, InventoryAnalysis, BulkAnalysisRequest, BulkAnalysisResponse
 from api.routes.operations import router as ops_router
 from api.routes.purchase_orders import router as po_router
 from api.routes.run_sync import router as run_sync_router
@@ -30,9 +31,15 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-def _get_api_key_key(request: Request) -> str:
-    api_key = request.headers.get("x-api-key") or request.headers.get("X-API-Key") or "anonymous"
-    return f"api-key:{api_key}"
+@app.get("/health")
+@limiter.limit("60/minute")
+async def health(request: Request):
+    return {
+        "status": "healthy",
+        "agent": "inventory",
+        "version": "1.0.0",
+        "provider": "gemini" if os.getenv("GOOGLE_API_KEY") else "mock"
+    }
 
 
 @app.exception_handler(Exception)
@@ -75,17 +82,6 @@ async def root():
             "health": "GET /health"
         },
         "docs": "/docs"
-    }
-
-
-@app.get("/health")
-@limiter.limit("60/minute")
-async def health(request: Request):
-    return {
-        "status": "healthy",
-        "agent": "inventory",
-        "version": "1.0.0",
-        "provider": "gemini" if os.getenv("GOOGLE_API_KEY") else "mock"
     }
 
 
