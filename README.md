@@ -101,6 +101,14 @@ The agent is a directed state graph. Each node is an independent, traced functio
 
 ## Quick Start
 
+### Production-readiness status
+
+This repository now includes:
+- CI automation for backend and frontend validation
+- a hardened container image with a non-root runtime user and health checks
+- API key, idempotency, webhook deduplication, and LLM spend-cap safeguards
+- regression tests covering the new safety behaviors
+
 ### Prerequisites
 
 - Docker & Docker Compose (recommended) or Python 3.12+ locally
@@ -151,6 +159,17 @@ curl -X POST http://localhost:8002/api/v1/run-sync \
 ```
 
 The agent syncs products, runs forecasts, detects risks, drafts POs, and sends Slack notifications. POs pause for human approval before they proceed.
+
+### Demo / deployment
+
+A live demo is the next best step for investor, recruiter, or client visibility.
+
+Suggested rollout:
+- Backend: Render or Railway
+- Frontend: Vercel
+- Demo flow: trigger a sync, review a risk alert, approve a PO, and show the resulting notification
+
+If you want a zero-friction demo experience, the repo is now structured so that a hosted backend plus frontend can be brought up quickly with minimal friction.
 
 ---
 
