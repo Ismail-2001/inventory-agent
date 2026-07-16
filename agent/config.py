@@ -15,6 +15,9 @@ class Settings:
     shopify_admin_api_token: str = field(
         default_factory=lambda: os.getenv("SHOPIFY_ADMIN_API_TOKEN", "")
     )
+    public_api_url: str = field(
+        default_factory=lambda: os.getenv("PUBLIC_API_URL", "http://localhost:8002")
+    )
     shopify_api_version: str = field(
         default_factory=lambda: os.getenv("SHOPIFY_API_VERSION", "2026-01")
     )
@@ -42,6 +45,9 @@ class Settings:
     )
     google_api_key: str = field(
         default_factory=lambda: os.getenv("GOOGLE_API_KEY", "")
+    )
+    groq_api_key: str = field(
+        default_factory=lambda: os.getenv("GROQ_API_KEY", "")
     )
 
     agent_api_key: str = field(
@@ -92,6 +98,8 @@ class Settings:
             missing.append("SHOPIFY_ADMIN_API_TOKEN")
         if not self.database_url:
             missing.append("DATABASE_URL")
+        if self.environment == "production" and not self.public_api_url:
+            missing.append("PUBLIC_API_URL")
         if missing:
             raise ValueError(
                 f"Missing required settings: {', '.join(missing)}. "

@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import json
+from collections import OrderedDict
 from datetime import datetime
 from inspect import isawaitable
 from typing import Awaitable, Callable
@@ -15,7 +16,8 @@ from agent.db import async_session_factory, session_scope
 from agent.models import Sku, SalesHistory, WebhookEvent
 from agent.shopify_sync import sync_products_and_inventory, sync_single_variant
 
-_processed_webhook_events: set[str] = set()
+_processed_webhook_events: OrderedDict[str, None] = OrderedDict()
+_MAX_WEBHOOK_CACHE_SIZE = 1000
 
 
 async def verify_shopify_webhook(request: Request):
@@ -51,7 +53,12 @@ async def _webhook_already_processed(event_id: str | None) -> bool:
 async def _mark_webhook_processed(event_id: str | None, event_type: str | None):
     if not event_id:
         return
-    _processed_webhook_events.add(event_id)
+    if event_id in _processed_webhook_events:
+        _processed_webhook_events.move_to_end(event_id)
+    else:
+        _processed_webhook_events[event_id] = None
+        if len(_processed_webhook_events) > _MAX_WEBHOOK_CACHE_SIZE:
+            _processed_webhook_events.popitem(last=False)
     async with session_scope(async_session_factory) as session:
         session.add(WebhookEvent(event_id=event_id, event_type=event_type))
         await session.commit()
@@ -109,7 +116,10 @@ async def handle_order_create(payload: dict):
             stmt = pg_insert(SalesHistory).values(
                 sku_id=sku.id, date=order_date, units_sold=quantity
             )
-            stmt = stmt.on_conflict_do_nothing(index_elements=["id"])
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["sku_id", "date"],
+                set_={"units_sold": stmt.excluded.units_sold},
+            )
             await session.execute(stmt)
 
         await session.commit()

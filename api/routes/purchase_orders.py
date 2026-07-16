@@ -7,7 +7,6 @@ from sqlalchemy import select
 from agent.auth import verify_api_key, require_role
 from api.rate_limit import limiter
 from agent.db import async_session_factory, session_scope
-from agent.graph import get_compiled_graph
 from agent.models import IdempotencyKey, POStatus, PurchaseOrder
 from agent.signing import sign_token, verify_token
 
@@ -52,8 +51,8 @@ async def _update_po_status(po_id: int, status: POStatus, **extra):
             await session.commit()
 
 
-async def _resume_graph(thread_id: str, resume_value: str):
-    graph = await get_compiled_graph()
+async def _resume_graph(request: Request, thread_id: str, resume_value: str):
+    graph = request.app.state.graph
     await graph.ainvoke(
         Command(resume=resume_value),
         {"configurable": {"thread_id": thread_id}},
@@ -121,10 +120,10 @@ async def list_purchase_orders(
     ]
 
 
-async def _approve_po_impl(po_id: int, approved_by: str, quantity: int | None):
+async def _approve_po_impl(request: Request, po_id: int, approved_by: str, quantity: int | None):
     po, thread_id = await _resolve_po(po_id)
     await _mark_edited_if_changed(po_id, quantity)
-    await _resume_graph(thread_id, "approve")
+    await _resume_graph(request, thread_id, "approve")
     await _update_po_status(
         po_id, POStatus.approved,
         approved_by=approved_by,
@@ -134,9 +133,9 @@ async def _approve_po_impl(po_id: int, approved_by: str, quantity: int | None):
     return {"status": "approved", "po_id": po_id}
 
 
-async def _reject_po_impl(po_id: int, reason: str):
+async def _reject_po_impl(request: Request, po_id: int, reason: str):
     po, thread_id = await _resolve_po(po_id)
-    await _resume_graph(thread_id, "reject")
+    await _resume_graph(request, thread_id, "reject")
     await _update_po_status(po_id, POStatus.rejected, rejected_reason=reason or None)
     return {"status": "rejected", "po_id": po_id}
 
@@ -155,7 +154,7 @@ async def approve_po(
     return await _run_with_idempotency(
         idempotency_key,
         f"/api/v1/po/{po_id}/approve",
-        lambda: _approve_po_impl(po_id, approved_by, quantity),
+        lambda: _approve_po_impl(request, po_id, approved_by, quantity),
     )
 
 
@@ -172,7 +171,7 @@ async def reject_po(
     return await _run_with_idempotency(
         idempotency_key,
         f"/api/v1/po/{po_id}/reject",
-        lambda: _reject_po_impl(po_id, reason),
+        lambda: _reject_po_impl(request, po_id, reason),
     )
 
 
@@ -192,7 +191,7 @@ async def po_action_via_token(
     if action == "approve":
         po, thread_id = await _resolve_po(po_id)
         await _mark_edited_if_changed(po_id, quantity)
-        await _resume_graph(thread_id, "approve")
+        await _resume_graph(request, thread_id, "approve")
         await _update_po_status(
             po_id, POStatus.approved,
             approved_by="token",
@@ -202,7 +201,7 @@ async def po_action_via_token(
         return {"status": "approved", "po_id": po_id}
     elif action == "reject":
         po, thread_id = await _resolve_po(po_id)
-        await _resume_graph(thread_id, "reject")
+        await _resume_graph(request, thread_id, "reject")
         await _update_po_status(po_id, POStatus.rejected, rejected_reason=reason or None)
         return {"status": "rejected", "po_id": po_id}
     else:

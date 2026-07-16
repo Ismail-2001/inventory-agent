@@ -28,15 +28,13 @@ async def calculate_forecast(sku_id: int, current_stock: int, lead_time_days: in
     if not rows:
         predicted = 0.0
     else:
-        by_day: dict = {}
-        for units, d in rows:
-            by_day[d.isoformat()] = units
+        ordered_rows = sorted(rows, key=lambda row: row[1])
+        daily_values = [float(units) for units, _ in ordered_rows]
 
-        if not by_day:
+        if not daily_values:
             predicted = 0.0
         else:
-            avg = sum(by_day.values()) / len(by_day)
-            daily_values = [float(v) for v in by_day.values()]
+            avg = sum(daily_values) / len(daily_values)
             smoothed = exponential_smoothing(daily_values)
             predicted = max(smoothed, avg * 0.5)
 

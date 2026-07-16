@@ -3,7 +3,6 @@ import uuid
 from fastapi import APIRouter, Depends, Request
 
 from agent.auth import verify_api_key
-from agent.graph import get_compiled_graph
 from api.rate_limit import limiter
 from agent.db import async_session_factory
 from agent.models import PurchaseOrder
@@ -15,7 +14,7 @@ router = APIRouter()
 @limiter.limit("5/minute")
 async def run_sync(request: Request, merchant=Depends(verify_api_key)):
     thread_id = str(uuid.uuid4())
-    graph = await get_compiled_graph()
+    graph = request.app.state.graph
     result = await graph.ainvoke({}, {"configurable": {"thread_id": thread_id}})
 
     pending_pos = result.get("purchase_orders", [])

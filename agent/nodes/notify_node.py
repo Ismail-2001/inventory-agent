@@ -6,16 +6,15 @@ from agent.telemetry import trace_node
 
 
 def _make_domain() -> str:
-    return settings.shopify_store_domain or "localhost:8002"
+    return settings.public_api_url.rstrip("/") if settings.public_api_url else "http://localhost:8002"
 
 
-@trace_node("notify")
-async def notify_node(state: dict) -> dict:
+def _build_pending_summary(state: dict) -> str:
     alerts = state.get("risk_alerts", [])
     pos = state.get("purchase_orders", [])
 
     if not alerts and not pos:
-        return {**state}
+        return ""
 
     critical = [a for a in alerts if a["risk_level"] == "critical"]
     warning = [a for a in alerts if a["risk_level"] == "warning"]
@@ -45,10 +44,49 @@ async def notify_node(state: dict) -> dict:
             summary_lines.append(f"    Approve: {domain}/api/v1/po/action?token={approve_token}")
             summary_lines.append(f"    Reject:  {domain}/api/v1/po/action?token={reject_token}&reason=")
 
-    summary = "\n".join(summary_lines)
+    return "\n".join(summary_lines)
+
+
+def _build_confirmed_summary(state: dict) -> str:
+    pos = state.get("purchase_orders", [])
+    if not pos:
+        return ""
+
+    latest_po = pos[-1]
+    status = state.get("approval_status") or "updated"
+    actor = state.get("approved_by") or "the team"
+    if status == "approved":
+        return f"PO #{latest_po['po_id']} approved by {actor}"
+    if status == "rejected":
+        return f"PO #{latest_po['po_id']} rejected: {state.get('rejected_reason', 'no reason provided')}"
+    return f"PO #{latest_po['po_id']} {status}"
+
+
+@trace_node("notify_pending")
+async def notify_pending_node(state: dict) -> dict:
+    summary = _build_pending_summary(state)
+    if not summary:
+        return {**state, "notification_summary": ""}
 
     if settings.slack_webhook_url:
         async with httpx.AsyncClient(timeout=10.0) as client:
             await client.post(settings.slack_webhook_url, json={"text": summary})
 
     return {**state, "notification_summary": summary}
+
+
+@trace_node("notify_confirmed")
+async def notify_confirmed_node(state: dict) -> dict:
+    summary = _build_confirmed_summary(state)
+    if not summary:
+        return {**state}
+
+    if settings.slack_webhook_url:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            await client.post(settings.slack_webhook_url, json={"text": summary})
+
+    return {**state, "confirmation_summary": summary}
+
+
+async def notify_node(state: dict) -> dict:
+    return await notify_pending_node(state)

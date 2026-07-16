@@ -56,6 +56,12 @@ class SalesHistory(Base):
 
     sku: Mapped["Sku"] = relationship(back_populates="sales_records")
 
+    __table_args__ = (
+        {
+            "sqlite_autoincrement": True,
+        },
+    )
+
 
 class Forecast(Base):
     __tablename__ = "forecasts"
@@ -90,6 +96,7 @@ class Supplier(Base):
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     contact_email: Mapped[Optional[str]] = mapped_column(String(256))
     default_lead_time_days: Mapped[int] = mapped_column(Integer, default=7)
+    default_moq: Mapped[int] = mapped_column(Integer, default=1)
     moq_by_sku: Mapped[Optional[dict]] = mapped_column(JSONB, default={})
     unit_cost_by_sku: Mapped[Optional[dict]] = mapped_column(JSONB, default={})
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

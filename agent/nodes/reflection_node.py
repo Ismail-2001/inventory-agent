@@ -25,7 +25,7 @@ def _template_insight(acceptance: dict, forecast: dict | list) -> str:
 
 
 async def _generate_insight(acceptance: dict, forecast: dict | list) -> str:
-    if not settings.openai_api_key and not settings.google_api_key:
+    if not settings.openai_api_key and not settings.google_api_key and not settings.groq_api_key:
         return _template_insight(acceptance, forecast)
 
     prompt = (

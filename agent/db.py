@@ -82,7 +82,7 @@ class AsyncPostgresSaver(PostgresSaver):
             yield t
 
 
-def create_checkpointer() -> PostgresSaver:
+def create_checkpointer() -> AsyncPostgresSaver:
     from psycopg_pool import ConnectionPool
 
     pool = ConnectionPool(
@@ -94,3 +94,11 @@ def create_checkpointer() -> PostgresSaver:
     saver = AsyncPostgresSaver(pool)
     saver.setup()
     return saver
+
+
+async def close_checkpointer(saver: AsyncPostgresSaver | None):
+    if saver is None:
+        return
+    pool = getattr(saver, "_pool", None)
+    if pool is not None:
+        await pool.close()

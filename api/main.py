@@ -7,6 +7,9 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+from agent.db import close_checkpointer, create_checkpointer
+from agent.graph import build_graph
+
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
@@ -149,8 +152,16 @@ async def forecast_demand(
 async def startup():
     settings.validate_required()
 
+    app.state.checkpointer = create_checkpointer()
+    app.state.graph = build_graph().compile(checkpointer=app.state.checkpointer, interrupt_after=["notify_pending"])
+
     from agent.scheduler import start
     start()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await close_checkpointer(getattr(app.state, "checkpointer", None))
 
 
 if __name__ == "__main__":

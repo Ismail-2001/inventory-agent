@@ -34,7 +34,7 @@ def _template_reasoning(data: dict) -> str:
 
 
 async def _generate_reasoning(data: dict) -> str:
-    if not settings.openai_api_key and not settings.google_api_key:
+    if not settings.openai_api_key and not settings.google_api_key and not settings.groq_api_key:
         return _template_reasoning(data)
 
     prompt = (
@@ -96,7 +96,10 @@ async def po_draft_node(state: dict) -> dict:
             unit_cost = 0.0
             if supplier:
                 supplier_id = supplier.id
-                moq = supplier.moq_by_sku.get(sku["sku_code"], supplier.default_lead_time_days) if isinstance(supplier.moq_by_sku, dict) else 1
+                if isinstance(supplier.moq_by_sku, dict) and sku.get("sku_code") in supplier.moq_by_sku:
+                    moq = supplier.moq_by_sku[sku["sku_code"]]
+                else:
+                    moq = supplier.default_moq or 1
                 unit_cost = supplier.unit_cost_by_sku.get(sku["sku_code"], 0.0) if isinstance(supplier.unit_cost_by_sku, dict) else 0.0
 
         quantity = calculate_reorder_quantity(

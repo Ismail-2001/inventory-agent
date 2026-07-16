@@ -1,5 +1,8 @@
+from types import SimpleNamespace
+
 import pytest
 from agent.forecast import exponential_smoothing
+from agent.nodes.forecast_node import calculate_forecast
 
 
 def test_exponential_smoothing_constant():
@@ -28,3 +31,61 @@ def test_exponential_smoothing_default_alpha():
     result = exponential_smoothing(values)
     assert result < 100.0
     assert result > 80.0
+
+
+@pytest.mark.asyncio
+async def test_calculate_forecast_sorts_history_before_smoothing(monkeypatch):
+    class FakeSession:
+        def __init__(self, rows):
+            self._rows = rows
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def execute(self, query):
+            return SimpleNamespace(all=lambda: self._rows)
+
+        async def commit(self):
+            return None
+
+        async def refresh(self, obj):
+            return None
+
+    class FakeResult:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def all(self):
+            return self._rows
+
+    class FakeSessionFactory:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def __call__(self):
+            return FakeSession(self.rows)
+
+    class FakeDate:
+        def __init__(self, value):
+            self.value = value
+
+        def isoformat(self):
+            return self.value
+
+    rows = [
+        (10, FakeDate("2024-01-03")),
+        (20, FakeDate("2024-01-01")),
+        (30, FakeDate("2024-01-02")),
+    ]
+
+    async def fake_session_factory():
+        return FakeSession(rows)
+
+    monkeypatch.setattr("agent.nodes.forecast_node.async_session_factory", fake_session_factory)
+
+    result = await calculate_forecast(1, 100, 7)
+
+    assert result.predicted_daily_demand >= 0
