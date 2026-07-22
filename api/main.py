@@ -23,6 +23,17 @@ from api.routes.webhooks import router as webhooks_router
 from agent.auth import verify_api_key
 from agent.config import settings
 
+
+def _get_provider() -> str:
+    if os.getenv("GOOGLE_API_KEY"):
+        return "gemini"
+    if os.getenv("GROQ_API_KEY"):
+        return "groq"
+    if os.getenv("OPENAI_API_KEY"):
+        return "openai"
+    return "mock"
+
+
 app = FastAPI(
     title="Inventory Agent",
     description="AI-powered inventory management, demand forecasting, and reorder optimization",
@@ -41,9 +52,8 @@ async def health(request: Request):
         "status": "healthy",
         "agent": "inventory",
         "version": "1.0.0",
-        "provider": "gemini" if os.getenv("GOOGLE_API_KEY") else "mock"
+        "provider": _get_provider(),
     }
-
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
