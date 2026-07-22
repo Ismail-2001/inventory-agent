@@ -53,6 +53,7 @@ async def health(request: Request):
         "agent": "inventory",
         "version": "1.0.0",
         "provider": _get_provider(),
+        "model": settings.model_name,
     }
 
 @app.exception_handler(Exception)

@@ -277,20 +277,17 @@ async def sync_sales_history(days: int = 90) -> int:
                         continue
 
                     sku_code: str | None = (var or {}).get("sku") or li.get("sku")
-                    if not sku_code:
-                        import logging
-                        logging.getLogger("shopify_sync").warning(
-                            "Skipping line item — no SKU on variant or top-level. "
-                            "variant_id=%s qty=%s",
-                            variant_id, quantity,
-                        )
+
+                    if not sku_code and not variant_id:
                         continue
 
                     async with async_session_factory() as session:
-                        result = await session.execute(
-                            select(Sku).where(Sku.sku_code == sku_code).limit(1)
-                        )
-                        sku = result.scalar_one_or_none()
+                        sku = None
+                        if sku_code:
+                            result = await session.execute(
+                                select(Sku).where(Sku.sku_code == sku_code).limit(1)
+                            )
+                            sku = result.scalar_one_or_none()
                         if sku is None and variant_id:
                             result = await session.execute(
                                 select(Sku).where(Sku.shopify_variant_id == variant_id).limit(1)
@@ -305,7 +302,7 @@ async def sync_sales_history(days: int = 90) -> int:
                             units_sold=quantity,
                         )
                         stmt = stmt.on_conflict_do_nothing(
-                            index_elements=["id"]
+                            constraint="uq_sales_history_sku_date"
                         )
                         await session.execute(stmt)
                         await session.commit()

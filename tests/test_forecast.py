@@ -48,6 +48,9 @@ async def test_calculate_forecast_sorts_history_before_smoothing(monkeypatch):
         async def execute(self, query):
             return SimpleNamespace(all=lambda: self._rows)
 
+        def add(self, obj):
+            return None
+
         async def commit(self):
             return None
 
@@ -75,13 +78,19 @@ async def test_calculate_forecast_sorts_history_before_smoothing(monkeypatch):
         def isoformat(self):
             return self.value
 
+        def __lt__(self, other):
+            return self.value < other.value
+
+        def __gt__(self, other):
+            return self.value > other.value
+
     rows = [
         (10, FakeDate("2024-01-03")),
         (20, FakeDate("2024-01-01")),
         (30, FakeDate("2024-01-02")),
     ]
 
-    async def fake_session_factory():
+    def fake_session_factory():
         return FakeSession(rows)
 
     monkeypatch.setattr("agent.nodes.forecast_node.async_session_factory", fake_session_factory)

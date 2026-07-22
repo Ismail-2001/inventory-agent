@@ -5,6 +5,8 @@ import { LayoutGrid, ClipboardCheck, Boxes, BarChart3, Settings as SettingsIcon 
 import { cn } from '../lib/utils'
 import { onToast } from '../lib/toast'
 
+type HealthState = 'connected' | 'disconnected' | 'checking'
+
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutGrid },
   { path: '/inventory', label: 'Inventory', icon: Boxes },
@@ -16,6 +18,18 @@ const navItems = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const [toasts, setToasts] = useState<{ id: number; msg: string }[]>([])
+  const [health, setHealth] = useState<HealthState>('checking')
+
+  useEffect(() => {
+    const check = () => {
+      fetch('/health')
+        .then(r => r.ok ? setHealth('connected') : setHealth('disconnected'))
+        .catch(() => setHealth('disconnected'))
+    }
+    check()
+    const interval = setInterval(check, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     return onToast(msg => {
@@ -69,9 +83,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="border-t border-border px-4 py-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-healthy/30 bg-healthy-bg px-2 py-0.5 font-mono text-[11px] font-medium text-healthy">
-            <span className="h-1.5 w-1.5 rounded-full bg-healthy" />
-            Connected
+          <span className={cn(
+            'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[11px] font-medium transition-colors',
+            health === 'connected' ? 'border-healthy/30 bg-healthy-bg text-healthy' :
+            health === 'checking' ? 'border-muted/30 bg-muted-bg text-ink-faint' :
+            'border-danger/30 bg-danger-bg text-danger',
+          )}>
+            <span className={cn(
+              'h-1.5 w-1.5 rounded-full',
+              health === 'connected' ? 'bg-healthy' :
+              health === 'checking' ? 'bg-ink-faint' :
+              'bg-danger',
+            )} />
+            {health === 'connected' ? 'Connected' : health === 'checking' ? 'Checking...' : 'Disconnected'}
           </span>
         </div>
       </aside>
