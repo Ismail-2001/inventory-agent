@@ -91,6 +91,7 @@ async def root():
 @app.post("/api/v1/analyze", response_model=InventoryAnalysis, deprecated=True)
 @limiter.limit("60/minute")
 async def analyze_inventory(
+    request: Request,
     item: InventoryItem,
     x_api_key: str = Depends(verify_api_key)
 ):
@@ -123,12 +124,13 @@ async def analyze_inventory(
 @app.post("/api/v1/bulk", response_model=BulkAnalysisResponse, deprecated=True)
 @limiter.limit("60/minute")
 async def analyze_bulk(
-    request: BulkAnalysisRequest,
+    request: Request,
+    request_body: BulkAnalysisRequest,
     x_api_key: str = Depends(verify_api_key)
 ):
     """DEPRECATED: see /api/v1/analyze. Use /api/v1/run-sync instead."""
     try:
-        result = await agent.analyze_bulk(request.items)
+        result = await agent.analyze_bulk(request_body.items)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -137,6 +139,7 @@ async def analyze_bulk(
 @app.post("/api/v1/forecast", deprecated=True)
 @limiter.limit("60/minute")
 async def forecast_demand(
+    request: Request,
     item: InventoryItem,
     x_api_key: str = Depends(verify_api_key)
 ):
